@@ -1,5 +1,6 @@
 package com.DeepLearning.lstm;
 
+
 public class StockData {
 	private String date; // date
     private String symbol; // stock name

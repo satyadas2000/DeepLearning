@@ -19,6 +19,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.nd4j.linalg.dataset.DataSet;
 
+
+
+
+import com.DeepLearning.lstm.PlotUtil;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,20 +45,19 @@ public class StockPricePredictionLSTMSpark {
         String filetraining = "D:\\bigdata\\spark\\testdata\\deep\\stock-google-train.csv";
         String testfile = "D:\\bigdata\\spark\\testdata\\deep\\stock-google-test.csv";
         		//new ClassPathResource("prices-split-adjusted.csv").getFile().getAbsolutePath();
-        String symbol = "GOOG"; // stock name
+        String symbol = "WLTW"; // stock name
         int batchSize = 64; // mini-batch size
 
 
         log.info("Create dataSet iterator...");
         PriceCategory category = PriceCategory.CLOSE; // CLOSE: predict close price
         StockDataSetIterator iterator = new StockDataSetIterator(filetraining, symbol, batchSize, exampleLength, category);
-        StockDataSetIterator iteratortest = new StockDataSetIterator(testfile, symbol, batchSize, exampleLength, category);
+      
         
         log.info("Build lstm networks...");
         MultiLayerNetwork net = RecurrentNets.buildLstmNetworks(iterator.inputColumns(), iterator.totalOutcomes());
         
-
-        
+       
         
         
         SparkConf sparkConf = new SparkConf();
@@ -64,17 +68,15 @@ public class StockPricePredictionLSTMSpark {
     	JavaSparkContext sc = new JavaSparkContext(sparkConf);
     	
     	List<DataSet> trainDataList = new ArrayList<>();
-    	List<DataSet> testDataList = new ArrayList<>();
+
 
     	while (iterator.hasNext()) {
     	trainDataList.add(iterator.next());
     	}
-    	while (iteratortest.hasNext()) {
-    		testDataList.add(iteratortest.next());
-    	}
+
 
     	JavaRDD<DataSet> trainData = sc.parallelize(trainDataList);
-    	JavaRDD<DataSet> testData = sc.parallelize(testDataList);
+
     	
     	TrainingMaster tm = new ParameterAveragingTrainingMaster.Builder(batchSizePerWorker)    //Each DataSet object: contains (by default) 32 examples
         .averagingFrequency(5)
@@ -89,16 +91,27 @@ public class StockPricePredictionLSTMSpark {
         int numEpochs = 25; // training epochs 100
       //Execute training:
         for (int i = 0; i < numEpochs; i++) {
-            sparkNet.fit(trainData);
-            log.info("Completed Epoch {}", i);
+        	sparkNet.fit(trainData);
+           // while (iterator.hasNext()) net.fit(iterator.next()); // fit model using mini-batch data
+           // iterator.reset(); // reset iterator
+           // net.rnnClearPreviousState(); // clear previous state
         }
         
-        //Perform evaluation (distributed)
-        Evaluation evaluation = sparkNet.evaluate(testData);
-        log.info("***** Evaluation *****");
-        log.info(evaluation.stats());
-
         log.info("Saving model...");
+        File locationToSave = new File("D:\\bigdata\\spark\\testdata\\deep\\StockPriceLSTM_".concat(String.valueOf(category)).concat(".zip"));
+        // saveUpdater: i.e., the state for Momentum, RMSProp, Adagrad etc. Save this to train your network more in the future
+        ModelSerializer.writeModel(net, locationToSave, true);
+
+        log.info("Load model...");
+        net = ModelSerializer.restoreMultiLayerNetwork(locationToSave);
+
+        StockDataSetIterator iteratortest = new StockDataSetIterator(testfile, symbol, batchSize, exampleLength, category);
+        double max = iteratortest.getMaxNum(category);
+        double min = iteratortest.getMinNum(category);
+        List<Pair<INDArray, INDArray>> test = iteratortest.getTestDataSet();
+        predictPriceOneAhead(net, test, max, min, category);
+
+        
         
      
 
@@ -123,7 +136,7 @@ public class StockPricePredictionLSTMSpark {
         log.info("Predict,Actual");
         for (int i = 0; i < predicts.length; i++) log.info(predicts[i] + "," + actuals[i]);
         log.info("Plot...");
-
+       PlotUtil.plot(predicts, actuals, String.valueOf(category));
     }
 
     private static void predictPriceMultiple (MultiLayerNetwork net, List<Pair<INDArray, INDArray>> testData, double max, double min) {

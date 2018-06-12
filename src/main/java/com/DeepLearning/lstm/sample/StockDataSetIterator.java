@@ -1,8 +1,11 @@
 package com.DeepLearning.lstm.sample;
 
+
 import com.google.common.collect.ImmutableMap;
 import com.opencsv.CSVReader;
+
 import javafx.util.Pair;
+
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.DataSetPreProcessor;
@@ -50,7 +53,8 @@ public class StockDataSetIterator implements DataSetIterator {
         this.miniBatchSize = miniBatchSize;
         this.exampleLength = exampleLength;
         this.category = category;       
-        train = stockDataList;     
+        train = stockDataList; 
+        test = generateTestDataSet(train);
         initializeOffsets();
     }
 
@@ -108,6 +112,43 @@ public class StockDataSetIterator implements DataSetIterator {
         return new DataSet(input, label);
     }
     
+    private List<Pair<INDArray, INDArray>> generateTestDataSet (List<StockData> stockDataList) {
+    	int window = exampleLength + predictLength;
+    	List<Pair<INDArray, INDArray>> test = new ArrayList<>();
+    	for (int i = 0; i < stockDataList.size() - window; i++) {
+    		INDArray input = Nd4j.create(new int[] {exampleLength, VECTOR_SIZE}, 'f');
+    		for (int j = i; j < i + exampleLength; j++) {
+    			StockData stock = stockDataList.get(j);
+    			input.putScalar(new int[] {j - i, 0}, (stock.getOpen() - minArray[0]) / (maxArray[0] - minArray[0]));
+    			input.putScalar(new int[] {j - i, 1}, (stock.getClose() - minArray[1]) / (maxArray[1] - minArray[1]));
+    			input.putScalar(new int[] {j - i, 2}, (stock.getLow() - minArray[2]) / (maxArray[2] - minArray[2]));
+    			input.putScalar(new int[] {j - i, 3}, (stock.getHigh() - minArray[3]) / (maxArray[3] - minArray[3]));
+    			input.putScalar(new int[] {j - i, 4}, (stock.getVolume() - minArray[4]) / (maxArray[4] - minArray[4]));
+    		}
+            StockData stock = stockDataList.get(i + exampleLength);
+            INDArray label;
+            if (category.equals(PriceCategory.ALL)) {
+                label = Nd4j.create(new int[]{VECTOR_SIZE}, 'f'); // ordering is set as 'f', faster construct
+                label.putScalar(new int[] {0}, stock.getOpen());
+                label.putScalar(new int[] {1}, stock.getClose());
+                label.putScalar(new int[] {2}, stock.getLow());
+                label.putScalar(new int[] {3}, stock.getHigh());
+                label.putScalar(new int[] {4}, stock.getVolume());
+            } else {
+                label = Nd4j.create(new int[] {1}, 'f');
+                switch (category) {
+                    case OPEN: label.putScalar(new int[] {0}, stock.getOpen()); break;
+                    case CLOSE: label.putScalar(new int[] {0}, stock.getClose()); break;
+                    case LOW: label.putScalar(new int[] {0}, stock.getLow()); break;
+                    case HIGH: label.putScalar(new int[] {0}, stock.getHigh()); break;
+                    case VOLUME: label.putScalar(new int[] {0}, stock.getVolume()); break;
+                    default: throw new NoSuchElementException();
+                }
+            }
+    		test.add(new Pair<>(input, label));
+    	}
+    	return test;
+    }
 
 
     private double feedLabel(StockData data) {

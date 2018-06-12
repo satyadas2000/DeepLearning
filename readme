@@ -1,0 +1,28 @@
+
+https://www.codeproject.com/Articles/1232979/Spam-Detection-Using-Long-Short-Term-Memory-LSTM-N
+https://isaacchanghau.github.io/post/stock_price_predict/
+https://github.com/romeokienzler/dl4j-examples/blob/master/dl4j-examples-scala/src/main/scala/IoTAnomalyExampleLSTMFFTWatsonIoT.scala
+https://github.com/deeplearning4j/oreilly-book-dl4j-examples/blob/master/dl4j-spark-examples/dl4j-spark/src/main/java/org/deeplearning4j/mlp/MnistMLPExample.java
+
+spark-submit --class com.DeepLearning.lstm.sample.StockPricePredictionLSTMSpark  D:\bigdata\spark\testdata\DeepLearning-0.0.1-SNAPSHOT.jar
+
+spark-submit --class com.DeepLearning.timeseries.SingleTimestepRegressionSpark  D:\bigdata\spark\testdata\DeepLearning-0.0.1-SNAPSHOT.jar
+
+spark-submit --class com.DeepLearning.MnistMLPExample  D:\bigdata\spark\testdata\DeepLearning-0.0.1-SNAPSHOT.jar
+
+
+spark-submit --class com.DeepLearning.spark.SparkLSTMClinicalTimeSeriesClassificationExampleHDFS  D:\bigdata\spark\testdata\DeepLearning-0.0.1-SNAPSHOT.jar
+spark-submit --class com.DeepLearning.spark.SparkLSTMClinicalTimeSeriesClassificationExample  D:\bigdata\spark\testdata\DeepLearning-0.0.1-SNAPSHOT.jar
+
+
+https://github.com/deeplearning4j/dl4j-examples/blob/cdh_blog_july2017/dl4j-spark-cdh-examples/src/main/java/org/deeplearning4j/examples/SparkLSTMClinicalTimeSeriesClassificationExampleHDFS.java
+https://github.com/deeplearning4j/dl4j-examples/tree/master/lstm-hdfs
+
+
+https://www.codeproject.com/Articles/1232979/Spam-Detection-Using-Long-Short-Term-Memory-LSTM-N
+https://www.xenonstack.com/blog/data-science/anomaly-detection-time-series-deep-learning/
+
+time series deep learning
+https://machinelearningmastery.com/time-series-prediction-lstm-recurrent-neural-networks-python-keras/
+https://www.javatips.net/api/dl4j-examples-master/dl4j-examples/src/main/java/org/deeplearning4j/examples/recurrent/regression/SingleTimestepRegressionExample.java
+https://github.com/deeplearning4j/oreilly-book-dl4j-examples/blob/master/dl4j-examples/src/main/resources/rnnRegression/passengers_train_0.csv

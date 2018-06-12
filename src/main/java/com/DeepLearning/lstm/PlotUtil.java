@@ -12,6 +12,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 import javax.swing.*;
 
+
 public class PlotUtil {
 	public static void plot(double[] predicts, double[] actuals, String name) {
 		double[] index = new double[predicts.length];

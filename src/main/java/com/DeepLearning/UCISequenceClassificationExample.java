@@ -34,7 +34,7 @@ import java.util.Random;
 
 public class UCISequenceClassificationExample {
 	 private static final Logger log = LoggerFactory.getLogger(UCISequenceClassificationExample.class);
-
+//https://archive.ics.uci.edu/ml/machine-learning-databases/synthetic_control-mld/synthetic_control.data.html
 	    //'baseDir': Base directory for the data. Change this if you want to save the data somewhere else
 	    private static File baseDir = new File("D:\\bigdata\\spark\\testdata\\deep\\UCI\\");
 	    private static File baseTrainDir = new File(baseDir, "train");
