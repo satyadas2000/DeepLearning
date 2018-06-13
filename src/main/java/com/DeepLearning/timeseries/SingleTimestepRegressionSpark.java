@@ -57,7 +57,7 @@ public class SingleTimestepRegressionSpark {
 
     public static void main(String[] args) throws Exception {
 
-        int miniBatchSize = 32;
+        int miniBatchSize = 10;
 
         // ----- Load the training data -----
         SequenceRecordReader trainReader = new CSVSequenceRecordReader(0, ";");
@@ -70,7 +70,17 @@ public class SingleTimestepRegressionSpark {
         testReader.initialize(new NumberedFileInputSplit(baseDir.getAbsolutePath() + "/test_%d.csv", 0, 0));
         DataSetIterator testIter = new SequenceRecordReaderDataSetIterator(testReader, miniBatchSize, -1, 1, true);
 
-   
+        //Create data set from iterator here since we only have a single data set
+        DataSet trainData = trainIter.next();
+        DataSet testData = testIter.next();
+
+        //Normalize data, including labels (fitLabel=true)
+        NormalizerMinMaxScaler normalizer = new NormalizerMinMaxScaler(0, 1);
+        normalizer.fitLabel(true);
+        normalizer.fit(trainData);              //Collect training data statistics
+
+        normalizer.transform(trainData);
+        normalizer.transform(testData);
 
         // ----- Configure the network -----
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
@@ -97,19 +107,17 @@ public class SingleTimestepRegressionSpark {
      	JavaSparkContext sc = new JavaSparkContext(sparkConf);     	
 
      	List<DataSet> trainDataList = new ArrayList<>();
-
-    	while (trainIter.hasNext()) {
-    	trainDataList.add(trainIter.next());
-    	}
-
-
-
-    	JavaRDD<DataSet> trainData = sc.parallelize(trainDataList);
+     	trainDataList.add(trainData);
     	
-    	JavaRDD<DataSet>[] splits = trainData.randomSplit(new double[] { 0.80, 0.10, 0.10 } ,1);
-    	JavaRDD<DataSet> jTrainData = splits[0];
-    	JavaRDD<DataSet> jValidData = splits[1];
-    	JavaRDD<DataSet> jTestData = splits[2];
+    	
+     	List<DataSet> testDataList = new ArrayList<>();
+     	testDataList.add(testData);
+
+
+
+    	JavaRDD<DataSet> trainDatardd = sc.parallelize(trainDataList);
+    	JavaRDD<DataSet> testDatardd = sc.parallelize(testDataList);
+    	LOGGER.info("testDatardd"+testDatardd.count());
 
 
      	
@@ -124,8 +132,11 @@ public class SingleTimestepRegressionSpark {
          SparkDl4jMultiLayer sparkNet = new SparkDl4jMultiLayer(sc, net, tm); 
          int nEpochs = 10;
          for (int i = 0; i < nEpochs; i++) {
-        	 sparkNet.fit(jTrainData);       
-             
+        	 sparkNet.fit(trainDatardd);       
+        	 LOGGER.info("Completed Epoch {}", i);
+             //Evaluate using Spark:
+             Evaluation evaluation = sparkNet.evaluate(testDatardd);
+             LOGGER.info("evaluation"+evaluation.stats());
          }
 
      //TODO TEST Evaluation

@@ -21,12 +21,12 @@ public class StockPricePrediction {
     private static int exampleLength = 22; // time series length, assume 22 working days per month
 
     public static void main (String[] args) throws IOException {
-        String file = "D:\\bigdata\\spark\\testdata\\deep\\stock-prices.csv";
+        String file = "D:\\bigdata\\spark\\testdata\\ICICI\\12-06-2016-TO-11-06-2018ICICIBANKALLN.csv";
         		//new ClassPathResource("prices-split-adjusted.csv").getFile().getAbsolutePath();
-        String symbol = "GOOG"; // stock name
+        String symbol = "ICICIBANK"; // stock name
         int batchSize = 64; // mini-batch size
-        double splitRatio = 0.9; // 90% for training, 10% for testing
-        int epochs = 100; // training epochs 100
+        double splitRatio = 0.8; // 90% for training, 10% for testing
+        int epochs = 140; // training epochs 100
 
         log.info("Create dataSet iterator...");
         PriceCategory category = PriceCategory.CLOSE; // CLOSE: predict close price
@@ -45,7 +45,7 @@ public class StockPricePrediction {
         }
 
         log.info("Saving model...");
-        File locationToSave = new File("D:\\bigdata\\spark\\testdata\\deep\\StockPriceLSTM_".concat(String.valueOf(category)).concat(".zip"));
+        File locationToSave = new File("D:\\bigdata\\spark\\testdata\\ICICI\\StockPriceLSTM_".concat(String.valueOf(category)).concat(".zip"));
         // saveUpdater: i.e., the state for Momentum, RMSProp, Adagrad etc. Save this to train your network more in the future
         ModelSerializer.writeModel(net, locationToSave, true);
 
@@ -60,6 +60,8 @@ public class StockPricePrediction {
         } else {
             double max = iterator.getMaxNum(category);
             double min = iterator.getMinNum(category);
+            log.info("max..."+max);
+            log.info("min..."+min);
             predictPriceOneAhead(net, test, max, min, category);
         }
         log.info("Done...");

@@ -59,7 +59,7 @@ public class SparkLSTMClinicalTimeSeriesClassificationExample {
     public static final int NB_VALID_EXAMPLES = 100;
     public static final int NB_TEST_EXAMPLES = 150;
 
-    // Number of features (inputs), heart rate, blood pressure
+    // Number of features (inputs), heart rate, blood pressure ( no of columns)
     public static final int NB_INPUTS = 86;
 
     public static final int NB_EPOCHS = 5;
